@@ -10,10 +10,12 @@ public class EnemyController : MonoBehaviour
     public int maxHealth;
     public int currentHealth;
 
-    public HealthController healthController; 
+    public HealthController healthController;
+    public bool moveLeft;
 
     private Animator _animator;
     private bool _isColliding;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -22,6 +24,7 @@ public class EnemyController : MonoBehaviour
         currentHealth = maxHealth;
         healthController.SetMaxHealth(maxHealth);
         healthController.SetCurrentHealth(currentHealth);
+        healthController.transform.rotation = Quaternion.Euler(new Vector3(0, 0, 0));
     }
 
     // Update is called once per frame
@@ -29,13 +32,24 @@ public class EnemyController : MonoBehaviour
     {
         _isColliding = false;
         _animator.SetInteger("State", (int)State);
+        _animator.SetBool("MoveLeft", moveLeft);
 
         healthController.SetCurrentHealth(currentHealth);
+        healthController.transform.rotation = Quaternion.Euler(new Vector3(0, 0, 0));
 
         if (currentHealth <= 0)
         {
             Destroy(this.gameObject);
         }
+
+        //if (rb.velocity.x < 0)
+        //{
+        //    transform.rotation = Quaternion.Euler(new Vector3(0, 180, 0));
+        //}
+        //else
+        //{
+        //    transform.rotation = Quaternion.Euler(new Vector3(0, 0, 0));
+        //}
     }
 
     private void OnTriggerEnter(Collider other)

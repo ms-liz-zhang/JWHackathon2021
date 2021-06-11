@@ -1,5 +1,6 @@
 using Assets.Scripts.Lib;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
@@ -11,6 +12,9 @@ public class PlayerController : MonoBehaviour
     public float timeBetweenAttacks;
 
     private Rigidbody _rigidBody;
+    public HealthController healthController;
+    public int maxHealth;
+    private int _currentHealth;
 
     public LayerMask groundLayers;
 
@@ -24,6 +28,7 @@ public class PlayerController : MonoBehaviour
     private Timer _timeBetweenAttacksTimer;
 
     private Animator _animator;
+    private bool _isColliding;
 
     // Start is called before the first frame update
     void Start()
@@ -39,12 +44,19 @@ public class PlayerController : MonoBehaviour
         _timeBetweenAttacksTimer.Update(timeBetweenAttacks);
         currentState = ActorState.Idle;
 
+        healthController.SetMaxHealth(maxHealth);
+        healthController.SetCurrentHealth(maxHealth);
+        _currentHealth = maxHealth;
         _animator = GetComponent<Animator>();
+        _isColliding = false;
     }
 
     // Update is called once per frame
     void Update()
     {
+        _isColliding = false;
+        healthController.transform.rotation = Quaternion.Euler(new Vector3(0, 0, 0));
+
         if (IsGrounded())
         {
             _isJumping = false;
@@ -78,6 +90,11 @@ public class PlayerController : MonoBehaviour
             }
         }
 
+        if (_currentHealth <= 0)
+        {
+            SceneManager.LoadScene(1);
+        }
+
         _animator.SetInteger("State", (int)currentState);
     }
 
@@ -85,9 +102,17 @@ public class PlayerController : MonoBehaviour
     {
         var movementVector = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
 
-        transform.Translate(movementVector * speed * Time.deltaTime);
+        transform.position += movementVector * speed * Time.deltaTime;
 
 
+        if (movementVector.x < 0)
+        {
+            transform.rotation = Quaternion.Euler(new Vector3(0, 180, 0));
+        }
+        else if (movementVector.x > 0)
+        {
+            transform.rotation = Quaternion.Euler(new Vector3(0, 0, 0));
+        }
     }
 
     private bool IsGrounded()
@@ -96,5 +121,21 @@ public class PlayerController : MonoBehaviour
             new Vector3(_collider.bounds.center.x, _collider.bounds.min.y, _collider.bounds.center.z),
             _collider.radius * 0.9f,
             groundLayers);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (_isColliding)
+            return;
+
+        var enemyAttack = other.gameObject.GetComponent<AttackController>();
+
+        if (enemyAttack == null)
+            return;
+
+        _isColliding = true;
+
+        _currentHealth -= enemyAttack.Damage;
+        healthController.SetCurrentHealth(_currentHealth);
     }
 }

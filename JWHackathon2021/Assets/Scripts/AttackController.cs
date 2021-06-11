@@ -15,7 +15,7 @@ public class AttackController : MonoBehaviour, IAttacker
     private Timer _attackDurationTimer;
     private Timer _timeBetweenAttacksTimer;
 
-    public int Damage { get { return 0; } }
+    public int Damage { get { return 1; } }
 
     // Start is called before the first frame update
     void Start()
